@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 from loguru import logger
 from os import getenv
+from prometheus_fastapi_instrumentator import Instrumentator
 
 app = FastAPI()
+Instrumentator().instrument(app).expose(app)
 
 POD_NAME = getenv("POD_NAME", "Unknown Pod")
 

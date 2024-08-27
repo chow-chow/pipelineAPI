@@ -3,8 +3,10 @@ IMAGE_NAME=pipeline-api:latest
 INGRESS_NGINX_VERSION=4.7.0
 NAMESPACE_INGRESS=ingress
 NAMESPACE_APP=default
+GRAFANA_VERSION=6.58.9
+NAMESPACE_MONITORING=monitoring
 
-start: init_cluster load_api
+start: init_cluster load_api init_monitoring
 
 init_cluster:
 	@echo "Initializing Kind cluster..."
@@ -34,6 +36,36 @@ install_ingress_nginx:
 deploy_app:
 	@echo "Deploying FastAPI app..."
 	@kubectl apply -f k8s/config/api/deployment.yaml -n $(NAMESPACE_APP)
+
+init_monitoring: install_grafana install_prometheus
+
+install_grafana:
+	@echo "Installing Grafana..."
+	helm repo add grafana https://grafana.github.io/helm-charts
+	helm upgrade grafana grafana/grafana --install --wait \
+		--version=$(GRAFANA_VERSION) \
+		--namespace=$(NAMESPACE_MONITORING) --create-namespace \
+		--values=k8s/config/monitoring/grafana/values.yaml
+	@NODE_IP=$$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}'); \
+	echo "Updating /etc/hosts to include Grafana domain..."; \
+	ENTRY="$$NODE_IP monitoring"; \
+	echo "Entry to add: $$ENTRY"; \
+	if ! grep -q "$$ENTRY" /etc/hosts; then echo "$$ENTRY" | sudo tee -a /etc/hosts > /dev/null; fi; \
+	echo "Grafana is now accessible at: http://monitoring:30123/grafana"
+
+install_prometheus:
+	@echo "Installing Prometheus..."
+	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+	helm upgrade prometheus prometheus-community/prometheus --install --wait \
+		--version=$(PROMETHEUS_VERSION) \
+		--namespace=$(NAMESPACE_MONITORING) --create-namespace \
+		--values=k8s/config/monitoring/prometheus/values.yaml
+	@echo "Prometheus installed successfully."
+
+uninstall_prometheus:
+	@echo "Uninstalling Prometheus..."
+	helm uninstall prometheus --namespace $(NAMESPACE_MONITORING)
+	@echo "Prometheus uninstalled successfully."
 
 stop:
 	@echo "Deleting Kind cluster..."

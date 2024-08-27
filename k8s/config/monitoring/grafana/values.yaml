@@ -1,0 +1,12 @@
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  path: /grafana
+  hosts:
+    - monitoring
+
+grafana.ini:
+  server:
+    domain: monitoring
+    root_url: http://monitoring:30123/grafana
+    serve_from_sub_path: true
