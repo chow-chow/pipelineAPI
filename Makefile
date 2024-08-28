@@ -67,6 +67,19 @@ uninstall_prometheus:
 	helm uninstall prometheus --namespace $(NAMESPACE_MONITORING)
 	@echo "Prometheus uninstalled successfully."
 
+run:
+	@echo "Running stern to tail logs for pods starting with 'pipeline-api'..."
+	@stern pipeline-api -n $(NAMESPACE_APP) --pod-colors "31, 32, 33, 34"
+
+reload:
+	@echo "Building Docker image..."
+	@docker build -t $(IMAGE_NAME) -f api/Dockerfile api
+	@echo "Loading Docker image into Kind cluster..."
+	kind load docker-image $(IMAGE_NAME) --name $(CLUSTER_NAME)
+	@echo "Restarting deployment to apply new image..."
+	@kubectl rollout restart deployment/pipeline-api -n $(NAMESPACE_APP)
+	@echo "Application reloaded successfully."
+
 stop:
 	@echo "Deleting Kind cluster..."
 	@if kind get clusters | grep -q "^$(CLUSTER_NAME)$$"; then \

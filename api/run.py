@@ -31,7 +31,11 @@ def setup_logging():
         logging.getLogger(name).handlers = []
         logging.getLogger(name).propagate = True
 
-    logger.configure(handlers=[{"sink": sys.stdout, "serialize": JSON_LOGS}])
+    # We don't care about logging prometheus scraping
+    def filter_metrics(record):
+        return "/metrics" not in record["message"]
+
+    logger.configure(handlers=[{"sink": sys.stdout, "serialize": JSON_LOGS, "filter": filter_metrics}])
 
 if __name__ == "__main__":
     server = Server(
