@@ -6,7 +6,7 @@ NAMESPACE_APP=default
 GRAFANA_VERSION=6.58.9
 NAMESPACE_MONITORING=monitoring
 
-start: init_cluster load_api init_monitoring
+start: init_cluster load_api init_monitoring show_urls
 
 init_cluster:
 	@echo "Initializing Kind cluster..."
@@ -46,12 +46,7 @@ install_grafana:
 		--version=$(GRAFANA_VERSION) \
 		--namespace=$(NAMESPACE_MONITORING) --create-namespace \
 		--values=k8s/config/monitoring/grafana/values.yaml
-	@NODE_IP=$$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}'); \
-	echo "Updating /etc/hosts to include Grafana domain..."; \
-	ENTRY="$$NODE_IP monitoring"; \
-	echo "Entry to add: $$ENTRY"; \
-	if ! grep -q "$$ENTRY" /etc/hosts; then echo "$$ENTRY" | sudo tee -a /etc/hosts > /dev/null; fi; \
-	echo "Grafana is now accessible at: http://monitoring:30123/grafana"
+	@echo "Grafana installed successfully."
 
 install_prometheus:
 	@echo "Installing Prometheus..."
@@ -61,6 +56,28 @@ install_prometheus:
 		--namespace=$(NAMESPACE_MONITORING) --create-namespace \
 		--values=k8s/config/monitoring/prometheus/values.yaml
 	@echo "Prometheus installed successfully."
+
+show_urls:
+	@echo "Waiting for Grafana pods to be in Running state..."
+	@kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=grafana -n $(NAMESPACE_MONITORING) --timeout=120s
+	@NODE_IP=$$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}') && \
+	echo "Updating /etc/hosts to include Grafana domain..."; \
+	ENTRY="$$NODE_IP monitoring"; \
+	echo "Entry to add: $$ENTRY"; \
+	if ! grep -q "$$ENTRY" /etc/hosts; then echo "$$ENTRY" | sudo tee -a /etc/hosts > /dev/null; fi; \
+	GRAFANA_PASSWORD=$$(kubectl get secret --namespace $(NAMESPACE_MONITORING) grafana -o jsonpath="{.data.admin-password}" | base64 --decode) && \
+	echo "============================================================" && \
+	echo "Grafana is now accessible at: http://monitoring:30123/grafana" && \
+	echo "Login with username: admin and password: $$GRAFANA_PASSWORD" && \
+	echo "============================================================"
+	@echo "Waiting for API pods to be in Running state..."
+	@kubectl wait --for=condition=ready pod -l app=pipeline-api -n $(NAMESPACE_APP) --timeout=120s
+	@echo "API pods are now Running."
+	@echo "============================================================" && \
+	echo "API is now accessible at: http://localhost:30123/api" && \
+	echo "============================================================"
+
+
 
 uninstall_prometheus:
 	@echo "Uninstalling Prometheus..."
