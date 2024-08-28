@@ -37,16 +37,7 @@ deploy_app:
 	@echo "Deploying FastAPI app..."
 	@kubectl apply -f k8s/config/api/deployment.yaml -n $(NAMESPACE_APP)
 
-init_monitoring: install_grafana install_prometheus
-
-install_grafana:
-	@echo "Installing Grafana..."
-	helm repo add grafana https://grafana.github.io/helm-charts
-	helm upgrade grafana grafana/grafana --install --wait \
-		--version=$(GRAFANA_VERSION) \
-		--namespace=$(NAMESPACE_MONITORING) --create-namespace \
-		--values=k8s/config/monitoring/grafana/values.yaml
-	@echo "Grafana installed successfully."
+init_monitoring: install_prometheus install_grafana
 
 install_prometheus:
 	@echo "Installing Prometheus..."
@@ -56,6 +47,22 @@ install_prometheus:
 		--namespace=$(NAMESPACE_MONITORING) --create-namespace \
 		--values=k8s/config/monitoring/prometheus/values.yaml
 	@echo "Prometheus installed successfully."
+
+install_grafana:
+	@echo "Installing Grafana..."
+	helm repo add grafana https://grafana.github.io/helm-charts
+	helm upgrade grafana grafana/grafana --install --wait \
+		--version=$(GRAFANA_VERSION) \
+		--namespace=$(NAMESPACE_MONITORING) --create-namespace \
+		--values=k8s/config/monitoring/grafana/values.yaml
+	@echo "Grafana installed successfully."
+	@echo "Importing Grafana dashboard..."
+	@GRAFANA_PASSWORD=$$(kubectl get secret --namespace $(NAMESPACE_MONITORING) grafana -o jsonpath="{.data.admin-password}" | base64 --decode) && \
+	curl -u admin:$$GRAFANA_PASSWORD -X POST 'http://monitoring:30123/grafana/api/dashboards/db' \
+	--header 'Content-Type: application/json' \
+	--header 'Accept: application/json' \
+	--data @k8s/config/monitoring/grafana/dashboard.json
+	@echo "Grafana dashboard imported successfully"
 
 show_urls:
 	@echo "Waiting for Grafana pods to be in Running state..."
@@ -77,8 +84,6 @@ show_urls:
 	echo "API is now accessible at: http://localhost:30123/api" && \
 	echo "============================================================"
 
-
-
 uninstall_prometheus:
 	@echo "Uninstalling Prometheus..."
 	helm uninstall prometheus --namespace $(NAMESPACE_MONITORING)
@@ -86,7 +91,7 @@ uninstall_prometheus:
 
 run:
 	@echo "Running stern to tail logs for pods starting with 'pipeline-api'..."
-	@stern pipeline-api -n $(NAMESPACE_APP) --pod-colors "31, 32, 33, 34"
+	@stern pipeline-api -n $(NAMESPACE_APP) --pod-colors "31, 32, 33, 34, 35"
 
 reload:
 	@echo "Building Docker image..."
