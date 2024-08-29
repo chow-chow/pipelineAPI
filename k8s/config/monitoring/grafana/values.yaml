@@ -15,12 +15,11 @@ datasources:
   datasources.yaml:
     apiVersion: 1
     datasources:
+      - name: Loki
+        type: loki
+        url: http://loki-gateway.logging
+        access: proxy
       - name: Prometheus
         type: prometheus
         url: http://prometheus-server.monitoring:80
         access: proxy
-
-sidecar:
-  dashboards:
-    enabled: true
-    label: grafana_dashboard
