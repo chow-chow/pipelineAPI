@@ -106,7 +106,7 @@ uninstall_prometheus:
 	helm uninstall prometheus --namespace $(NAMESPACE_MONITORING)
 	@echo "Prometheus uninstalled successfully."
 
-run:
+watch:
 	@echo "Running stern to tail logs for pods starting with 'pipeline-api'..."
 	@stern pipeline-api -n $(NAMESPACE_APP) --pod-colors "31, 32, 33, 34, 35"
 

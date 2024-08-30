@@ -31,11 +31,12 @@ def setup_logging():
         logging.getLogger(name).handlers = []
         logging.getLogger(name).propagate = True
 
-    # We don't care about logging prometheus scraping in stdout
+    # Add a filter to exclude /metrics logs in configure: "filter": filter_metrics
     def filter_metrics(record):
-        return "/metrics" not in record["message"]
+        message = record["message"]
+        return "/metrics" not in message and "loki-write.logging.svc.cluster.local" not in message
 
-    logger.configure(handlers=[{"sink": sys.stdout, "serialize": JSON_LOGS, "filter": filter_metrics}])
+    logger.configure(handlers=[{"sink": sys.stdout, "serialize": JSON_LOGS}])
 
 if __name__ == "__main__":
     server = Server(
