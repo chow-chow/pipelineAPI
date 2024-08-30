@@ -8,7 +8,7 @@ NAMESPACE_MONITORING=monitoring
 LOKI_VERSION=5.15.0
 NAMESPACE_LOGGING=logging
 
-start: init_cluster load_api init_monitoring show_urls
+start: init_cluster install_ingress_nginx init_monitoring load_api import_dashboard show_urls
 
 init_cluster:
 	@echo "Initializing Kind cluster..."
@@ -18,7 +18,7 @@ init_cluster:
 		echo "Cluster $(CLUSTER_NAME) already exists"; \
 	fi
 
-load_api: build_image install_ingress_nginx deploy_app
+load_api: build_image deploy_app
 
 build_image:
 	@echo "Building Docker image..."
@@ -39,7 +39,7 @@ deploy_app:
 	@echo "Deploying FastAPI app..."
 	@kubectl apply -f k8s/config/api/deployment.yaml -n $(NAMESPACE_APP)
 
-init_monitoring: install_prometheus install_loki install_promtail install_grafana import_dashboard
+init_monitoring: install_prometheus install_loki install_promtail install_grafana
 
 install_prometheus:
 	@echo "Installing Prometheus..."

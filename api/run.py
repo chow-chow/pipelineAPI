@@ -31,7 +31,7 @@ def setup_logging():
         logging.getLogger(name).handlers = []
         logging.getLogger(name).propagate = True
 
-    # We don't care about logging prometheus scraping
+    # We don't care about logging prometheus scraping in stdout
     def filter_metrics(record):
         return "/metrics" not in record["message"]
 
