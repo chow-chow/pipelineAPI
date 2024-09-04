@@ -1,6 +1,6 @@
 # PipelineAPI
 
-This application exemplifies how to automate the building of an infrastructure for the development and monitoring of metrics for a REST API using Kubernetes (k8s-kind) and Helm Charts.
+This application exemplifies how to automate the building of an infrastructure for the development and monitoring of metrics for a REST API in a microservices environment using Kubernetes (k8s-kind) and Helm Charts.
 
 ## Startup
 
