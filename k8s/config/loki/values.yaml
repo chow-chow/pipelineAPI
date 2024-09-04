@@ -1,0 +1,5 @@
+minio:
+  enabled: true
+
+loki:
+  auth_enabled: false

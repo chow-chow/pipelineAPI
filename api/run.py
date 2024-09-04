@@ -31,6 +31,11 @@ def setup_logging():
         logging.getLogger(name).handlers = []
         logging.getLogger(name).propagate = True
 
+    # Add a filter to exclude /metrics logs in configure: "filter": filter_metrics
+    def filter_metrics(record):
+        message = record["message"]
+        return "/metrics" not in message and "loki-write.logging.svc.cluster.local" not in message
+
     logger.configure(handlers=[{"sink": sys.stdout, "serialize": JSON_LOGS}])
 
 if __name__ == "__main__":

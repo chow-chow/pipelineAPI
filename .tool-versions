@@ -1,1 +1,4 @@
 helm 3.13.2
+stern 1.30.0
+kind 0.23.0
+kubectl 1.30.4
