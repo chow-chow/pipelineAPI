@@ -5,3 +5,5 @@ uvicorn==0.22.0
 requests==2.32.3
 prometheus-fastapi-instrumentator==7.0.0
 python-logging-loki==0.3.1
+asyncpg==0.29.0
+pyrqlite==2.2.3
