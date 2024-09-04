@@ -2,7 +2,7 @@
 
 This application exemplifies how to automate the building of an infrastructure for the development and monitoring of metrics for a REST API in a microservices environment using Kubernetes (k8s-kind) and Helm Charts.
 
-## Dependencies
+## Dependencies 🔨
 
 This project uses [`asdf`](https://asdf-vm.com/guide/getting-started.html) to manage dependencies. The required tools and their versions are specified in the `.tool-versions` file. You can automatically provision these tools by running the following command:
 
@@ -12,7 +12,7 @@ asdf install
 
 For a more comprehensive guide, check how to add [`plugins`](https://asdf-vm.com/manage/plugins.html) and install [`versions`](https://asdf-vm.com/manage/versions.html).
 
-## Startup
+## Startup 🚀
 
 To start the application, run the following command:
 
